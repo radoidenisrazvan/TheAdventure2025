@@ -9,6 +9,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp.Drawing.Processing;
+using System.Media;
 
 namespace TheAdventure;
 
@@ -21,6 +22,7 @@ public class Engine
     private readonly Dictionary<int, GameObject> _gameObjects = new();
     private readonly Dictionary<string, TileSet> _loadedTileSets = new();
     private readonly Dictionary<int, Tile> _tileIdMap = new();
+    private SoundPlayer? _pauseMusic;
 
     private Level _currentLevel = new();
     private PlayerObject? _player;
@@ -36,11 +38,12 @@ public class Engine
     {
         _renderer = renderer;
         _input = input;
+        _pauseMusic = new SoundPlayer("Assets/Sounds/pause_music.wav");
 
         _input.OnMouseClick += (_, coords) =>
         {
             // added for stop adding bombs if user = dead
-            if (!_awaitingRetry && !_isGameOver)
+            if (!_awaitingRetry && !_isGameOver && !_isPaused)
             {
                 AddBomb(coords.x, coords.y);
             }
@@ -119,6 +122,11 @@ public class Engine
         if (_input.IsKeyPPressed())
         {
             _isPaused = !_isPaused;
+            if (_isPaused)
+                _pauseMusic?.PlayLooping();
+            else
+                _pauseMusic?.Stop();
+
             Thread.Sleep(200); // debounce
         }
 
